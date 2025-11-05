@@ -5,7 +5,7 @@ We love contributions from everyone. By participating in this project, you agree
 ## Setting Up the Project
 
 1. Fork the repository
-2. Clone your fork: `git clone git@github.com:your-username/notigen.git`
+2. Clone your fork: `git clone git@github.com:ramshi7134/notigen.git`
 3. Install dependencies:
    ```bash
    composer install

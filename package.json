@@ -16,7 +16,7 @@
     "notifications",
     "templates"
   ],
-  "author": "Your Name",
+  "author": "Ramsheed <chatwith@ramsheed.com> (https://github.com/ramshi7134)",
   "license": "MIT",
   "devDependencies": {
     "laravel-mix": "^6.0.49",
