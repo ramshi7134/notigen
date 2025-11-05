@@ -7,7 +7,7 @@ A Laravel package that simplifies the process of creating, managing, and sending
 You can install the package via composer:
 
 ```bash
-composer require notigen/notigen
+composer require webpacks/notigen
 ```
 
 ## Configuration
