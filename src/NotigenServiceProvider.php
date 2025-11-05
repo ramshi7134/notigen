@@ -4,6 +4,7 @@ namespace Notigen;
 
 use Illuminate\Support\ServiceProvider;
 use Notigen\Commands\MakeNotificationCommand;
+use Notigen\Commands\ManageTemplateCommand;
 
 class NotigenServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,11 @@ class NotigenServiceProvider extends ServiceProvider
         $this->app->singleton('notigen', function ($app) {
             return new Notigen($app);
         });
+
+        // Register the template manager as a singleton
+        $this->app->singleton(TemplateManager::class, function ($app) {
+            return new TemplateManager();
+        });
     }
 
     /**
@@ -33,10 +39,18 @@ class NotigenServiceProvider extends ServiceProvider
             __DIR__.'/../config/notigen.php' => config_path('notigen.php'),
         ], 'notigen-config');
 
-        // Register the command if we are using the application via the CLI
+        // Publish migrations
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'notigen-migrations');
+
+        // Register the commands if we are using the application via the CLI
         if ($this->app->runningInConsole()) {
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+            
             $this->commands([
                 MakeNotificationCommand::class,
+                ManageTemplateCommand::class,
             ]);
         }
     }

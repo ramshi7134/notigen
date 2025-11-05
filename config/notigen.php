@@ -17,6 +17,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Templates Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This section defines the configuration for notification templates.
+    | You can define templates with their unique identifiers and variables.
+    |
+    */
+    'templates' => [
+        // Example template configuration:
+        // 'welcome_user' => [
+        //     'name' => 'Welcome User',
+        //     'description' => 'Template for welcoming new users',
+        //     'channels' => ['mail', 'database'],
+        //     'view' => 'notifications.welcome',
+        //     'variables' => [
+        //         'user_name' => 'User full name',
+        //         'app_name' => 'Application name',
+        //     ],
+        // ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Custom Templates Path
     |--------------------------------------------------------------------------
     |

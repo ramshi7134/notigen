@@ -5,19 +5,14 @@ namespace {{namespace}};
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Notigen\TemplateManager;
 
 class {{class}} extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
+{{template_properties}}
     /**
      * Get the notification's delivery channels.
      *
@@ -35,8 +30,6 @@ class {{class}} extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        return [
-            //
-        ];
+        return $this->variables;
     }
 }
