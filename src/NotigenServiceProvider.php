@@ -34,7 +34,7 @@ class NotigenServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Load routes
+        // Load routes with middleware group
         $this->loadRoutesFrom(__DIR__.'/routes/web.php');
 
         // Load views
@@ -43,20 +43,37 @@ class NotigenServiceProvider extends ServiceProvider
         // Load migrations
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-        // Publish the config file
-        $this->publishes([
-            __DIR__.'/../config/notigen.php' => config_path('notigen.php'),
-        ], 'notigen-config');
+        // Register publishable resources
+        if ($this->app->runningInConsole()) {
+            // Publish config
+            $this->publishes([
+                __DIR__.'/../config/notigen.php' => config_path('notigen.php'),
+            ], 'notigen-config');
 
-        // Publish migrations
-        $this->publishes([
-            __DIR__.'/../database/migrations' => database_path('migrations'),
-        ], 'notigen-migrations');
+            // Publish migrations
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'notigen-migrations');
 
-        // Publish views
-        $this->publishes([
-            __DIR__.'/../resources/views' => resource_path('views/vendor/notigen'),
-        ], 'notigen-views');
+            // Publish views
+            $this->publishes([
+                __DIR__.'/../resources/views' => resource_path('views/vendor/notigen'),
+            ], 'notigen-views');
+
+            // Publish assets
+            $this->publishes([
+                __DIR__.'/../public' => public_path('vendor/notigen'),
+            ], 'notigen-assets');
+        }
+
+        // Register blade directives
+        $this->registerBladeDirectives();
+    }
+
+    protected function registerBladeDirectives()
+    {
+        // Add custom blade directives if needed in the future
+        // Example: @notigen('template-name', ['var' => 'value'])
 
         // Register the commands if we are using the application via the CLI
         if ($this->app->runningInConsole()) {

@@ -4,22 +4,14 @@ namespace Notigen\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Notigen\Models\NotificationTemplate;
 
 class NotigenController extends Controller
 {
     public function index()
     {
-        $templates = config('notigen.templates', []);
-        $templateData = collect($templates)->map(function ($template, $key) {
-            return [
-                'id' => $key,
-                'name' => $template['name'] ?? '',
-                'type' => $template['channels'][0] ?? 'mail',
-                'created_at' => now()
-            ];
-        });
-        
-        return view('notigen::templates.index', compact('templateData'));
+        $templates = NotificationTemplate::latest()->get();
+        return view('notigen::templates.index', compact('templates'));
     }
 
     public function create()
@@ -30,26 +22,90 @@ class NotigenController extends Controller
 
     public function store(Request $request)
     {
-        // Add template storage logic here
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'channels' => 'required|array',
+            'channels.*' => 'string|in:' . implode(',', config('notigen.default_channels', ['mail'])),
+            'content' => 'required|string',
+            'variables' => 'nullable|array',
+            'variables.*.name' => 'required|string',
+            'variables.*.description' => 'nullable|string',
+        ]);
+
+        $template = NotificationTemplate::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'channels' => $validated['channels'],
+            'content' => $validated['content'],
+            'variables' => collect($validated['variables'] ?? [])->keyBy('name')->toArray(),
+        ]);
+
+        return redirect()
+            ->route('notigen.index')
+            ->with('success', 'Template created successfully.');
     }
 
     public function show($id)
     {
-        // Add template viewing logic here
+        $template = NotificationTemplate::findOrFail($id);
+        return view('notigen::templates.show', compact('template'));
     }
 
     public function edit($id)
     {
-        // Add template editing logic here
+        $template = NotificationTemplate::findOrFail($id);
+        $channels = config('notigen.default_channels', ['mail']);
+        return view('notigen::templates.edit', compact('template', 'channels'));
     }
 
     public function update(Request $request, $id)
     {
-        // Add template update logic here
+        $template = NotificationTemplate::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'channels' => 'required|array',
+            'channels.*' => 'string|in:' . implode(',', config('notigen.default_channels', ['mail'])),
+            'content' => 'required|string',
+            'variables' => 'nullable|array',
+            'variables.*.name' => 'required|string',
+            'variables.*.description' => 'nullable|string',
+        ]);
+
+        $template->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'channels' => $validated['channels'],
+            'content' => $validated['content'],
+            'variables' => collect($validated['variables'] ?? [])->keyBy('name')->toArray(),
+        ]);
+
+        return redirect()
+            ->route('notigen.index')
+            ->with('success', 'Template updated successfully.');
     }
 
     public function destroy($id)
     {
-        // Add template deletion logic here
+        $template = NotificationTemplate::findOrFail($id);
+        $template->delete();
+
+        return redirect()
+            ->route('notigen.index')
+            ->with('success', 'Template deleted successfully.');
+    }
+
+    public function preview(Request $request, $id)
+    {
+        $template = NotificationTemplate::findOrFail($id);
+        $data = $request->validate([
+            'variables' => 'required|array',
+        ]);
+
+        return response()->json([
+            'content' => $template->renderContent($data['variables'])
+        ]);
     }
 }
