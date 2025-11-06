@@ -1,12 +1,6 @@
 {
     "name": "webpacks/notigen",
-    "description": "A L    "config": {
-        "sort-packages": true,
-        "preferred-install": "dist",
-        "optimize-autoloader": true
-    },
-    "minimum-stability": "stable",
-    "prefer-stable": true package that simplifies the process of creating, managing, and sending custom notifications",
+    "description": "A Laravel package that simplifies the process of creating, managing, and sending custom notifications",
     "type": "library",
     "keywords": [
         "laravel",
