@@ -5,7 +5,8 @@ namespace Notigen\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static bool createNotification(string $name, array $channels = ['mail'])
+ * @method static void send(string $templateName, mixed $notifiable, array $data, array|null $channels = null)
+ * @method static \Notigen\Models\NotificationTemplate|null findTemplate(string $name)
  * 
  * @see \Notigen\Notigen
  */
