@@ -44,13 +44,12 @@ class NotificationTemplate extends Model
      */
     public function send($notifiable, array $data, ?array $channels = null)
     {
-        $notification = new TemplateNotification(
+        $channels = $channels ?? $this->channels;
+        $notifiable->notify(new \Notigen\Notifications\TemplateNotification(
             $this,
             $data,
-            $channels ?? $this->channels
-        );
-
-        $notifiable->notify($notification);
+            $channels
+        ));
     }
 
     /**
