@@ -6,6 +6,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Notigen\Models\NotificationTemplate;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Log;
 
 class TemplateNotification extends Notification implements ShouldQueue
 {
@@ -35,6 +37,12 @@ class TemplateNotification extends Notification implements ShouldQueue
         $this->data = $data;
         $this->channels = $channels;
 
+        Log::info('TemplateNotification created', [
+            'template' => $template->name,
+            'data' => $data,
+            'channels' => $channels
+        ]);
+
         if (config('notigen.queue_notifications', true)) {
             $this->onQueue(config('notigen.default_queue', 'default'));
         }
@@ -51,12 +59,19 @@ class TemplateNotification extends Notification implements ShouldQueue
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail($notifiable): array
+    public function toMail($notifiable): MailMessage
     {
-        return [
-            'subject' => $this->renderSubject(),
-            'html' => $this->template->renderContent($this->data),
-        ];
+        $renderedContent = $this->template->renderContent(['notifiable' => $notifiable] + $this->data);
+        
+        Log::info('TemplateNotification email being sent', [
+            'to' => $notifiable->email ?? 'no_email_found',
+            'template' => $this->template->name,
+            'content' => $renderedContent
+        ]);
+        
+        return (new MailMessage)
+            ->subject($this->renderSubject())
+            ->line($renderedContent);
     }
 
     /**
