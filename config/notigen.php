@@ -40,6 +40,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Route Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you can specify the route prefix and middleware for the notification
+    | template manager interface. Change these values according to your needs.
+    |
+    */
+    'route_prefix' => env('NOTIGEN_ROUTE_PREFIX', 'notigen'),
+
+    'middleware' => [
+        'web',
+        'auth'
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Custom Templates Path
     |--------------------------------------------------------------------------
     |

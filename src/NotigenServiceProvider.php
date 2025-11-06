@@ -34,6 +34,15 @@ class NotigenServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Load routes
+        $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+
+        // Load views
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'notigen');
+
+        // Load migrations
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+
         // Publish the config file
         $this->publishes([
             __DIR__.'/../config/notigen.php' => config_path('notigen.php'),
@@ -43,6 +52,11 @@ class NotigenServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'notigen-migrations');
+
+        // Publish views
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/notigen'),
+        ], 'notigen-views');
 
         // Register the commands if we are using the application via the CLI
         if ($this->app->runningInConsole()) {
