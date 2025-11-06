@@ -20,17 +20,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($templateData as $template)
+                                @forelse($templates as $template)
                                     <tr>
-                                        <td>{{ $template['name'] }}</td>
-                                        <td>{{ $template['type'] }}</td>
-                                        <td>{{ $template['created_at']->format('Y-m-d H:i') }}</td>
+                                        <td>{{ $template->name }}</td>
+                                        <td>{{ $template->channels[0] ?? 'mail' }}</td>
+                                        <td>{{ $template->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            <a href="{{ route('notigen.edit', $template['id']) }}"
+                                            <a href="{{ route('notigen.edit', $template->id) }}"
                                                 class="btn btn-sm btn-info">Edit</a>
-                                            <a href="{{ route('notigen.show', $template['id']) }}"
+                                            <a href="{{ route('notigen.show', $template->id) }}"
                                                 class="btn btn-sm btn-success">View</a>
-                                            <form action="{{ route('notigen.destroy', $template['id']) }}" method="POST"
+                                            <form action="{{ route('notigen.destroy', $template->id) }}" method="POST"
                                                 class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
