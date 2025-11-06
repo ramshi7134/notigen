@@ -9,12 +9,23 @@ class NotigenController extends Controller
 {
     public function index()
     {
-        return view('notigen::templates.index');
+        $templates = config('notigen.templates', []);
+        $templateData = collect($templates)->map(function ($template, $key) {
+            return [
+                'id' => $key,
+                'name' => $template['name'] ?? '',
+                'type' => $template['channels'][0] ?? 'mail',
+                'created_at' => now()
+            ];
+        });
+        
+        return view('notigen::templates.index', compact('templateData'));
     }
 
     public function create()
     {
-        return view('notigen::templates.create');
+        $channels = config('notigen.default_channels', ['mail']);
+        return view('notigen::templates.create', compact('channels'));
     }
 
     public function store(Request $request)
