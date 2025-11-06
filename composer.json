@@ -56,9 +56,11 @@
         "format": "vendor/bin/pint"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
-    "version": "1.0.3"
+    "version": "1.0.5"
 }
