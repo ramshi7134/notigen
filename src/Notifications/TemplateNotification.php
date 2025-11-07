@@ -90,13 +90,34 @@ class TemplateNotification extends Notification implements ShouldQueue
             $message = new MailMessage;
             $message->subject($this->renderSubject());
             
-            // Remove HTML tags and decode entities from content
+            // Get the rendered content and clean it up
             $renderedContent = $this->template->renderContent($data);
             $renderedContent = html_entity_decode(strip_tags($renderedContent));
             
-            // Use rendered content directly without greeting and salutation
-            $message->line($renderedContent);
-                   
+            // Split content into lines and process each line
+            $lines = explode("\n", $renderedContent);
+            $lines = array_map('trim', $lines);
+            
+            // Remove empty lines from start and end
+            while (!empty($lines) && empty($lines[0])) array_shift($lines);
+            while (!empty($lines) && empty(end($lines))) array_pop($lines);
+            
+            // If there's a greeting line (starts with "Hi" or "Hello"), use it as greeting
+            $firstLine = reset($lines);
+            if (preg_match('/^(Hi|Hello)\b/i', $firstLine)) {
+                $message->greeting($firstLine);
+                array_shift($lines);
+            }
+            
+            // Add each non-empty line as a separate line in the email
+            foreach ($lines as $line) {
+                if (!empty(trim($line))) {
+                    $message->line($line);
+                }
+            }
+            
+            $message->salutation('Regards');
+            
             return $message;
         } catch (\Exception $e) {
             Log::error('TemplateNotification email failed', [

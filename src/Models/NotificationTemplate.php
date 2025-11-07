@@ -28,7 +28,14 @@ class NotificationTemplate extends Model
 
     protected function replaceVariables(string $content, array $data): string
     {
-        return preg_replace_callback('/{{\\s*([\\w.]+)\\s*}}/', function ($matches) use ($data) {
+        // Replace {{name}} style variables
+        $content = preg_replace_callback('/{{\\s*([\\w.]+)\\s*}}/', function ($matches) use ($data) {
+            $key = $matches[1];
+            return $data[$key] ?? '';
+        }, $content);
+        
+        // Replace {name} style variables
+        return preg_replace_callback('/{([\\w.]+)}/', function ($matches) use ($data) {
             $key = $matches[1];
             return $data[$key] ?? '';
         }, $content);
