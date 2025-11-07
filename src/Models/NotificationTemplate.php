@@ -26,27 +26,32 @@ class NotificationTemplate extends Model
         return str_replace(['{', '}'], ['{{ ', ' }}'], $this->content);
     }
 
+    protected function replaceVariables(string $content, array $data): string
+    {
+        return preg_replace_callback('/{{\\s*([\\w.]+)\\s*}}/', function ($matches) use ($data) {
+            $key = $matches[1];
+            return $data[$key] ?? '';
+        }, $content);
+    }
+
     public function renderContent(array $data)
     {
         try {
-            $template = str_replace(['{', '}'], ['{{ ', ' }}'], $this->content);
-            
-            \Illuminate\Support\Facades\Log::info('Rendering template content', [
+            \Illuminate\Support\Facades\Log::info('Template rendering started', [
                 'template_name' => $this->name,
-                'template_content' => $template,
+                'content' => $this->content,
                 'data' => $data
             ]);
-            
-            $rendered = view('notigen::string-template', ['template' => $template])
-                ->with($data)
-                ->render();
-                
+
+            // First pass: Replace variables directly
+            $renderedContent = $this->replaceVariables($this->content, $data);
+
             \Illuminate\Support\Facades\Log::info('Template rendered successfully', [
                 'template_name' => $this->name,
-                'rendered_content' => $rendered
+                'rendered_content' => $renderedContent
             ]);
-            
-            return $rendered;
+
+            return $renderedContent;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Template rendering failed', [
                 'template_name' => $this->name,

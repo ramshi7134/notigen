@@ -74,12 +74,13 @@ class TemplateNotification extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         try {
-            $renderedContent = $this->template->renderContent(['notifiable' => $notifiable] + $this->data);
+            $data = ['notifiable' => $notifiable] + $this->data;
             
             try {
                 error_log('TemplateNotification email preparation: ' . json_encode([
                     'to' => $notifiable->email ?? 'no_email_found',
                     'template' => $this->template->name,
+                    'data' => $data,
                     'subject' => $this->renderSubject()
                 ]));
             } catch (\Exception $e) {
@@ -89,12 +90,12 @@ class TemplateNotification extends Notification implements ShouldQueue
             $message = new MailMessage;
             $message->subject($this->renderSubject());
             
-            if (!empty($this->data['name'])) {
-                $message->greeting('Hello ' . $this->data['name']);
-            }
+            // Remove HTML tags and decode entities from content
+            $renderedContent = $this->template->renderContent($data);
+            $renderedContent = html_entity_decode(strip_tags($renderedContent));
             
-            $message->line($renderedContent)
-                   ->salutation('Regards');
+            // Use rendered content directly without greeting and salutation
+            $message->line($renderedContent);
                    
             return $message;
         } catch (\Exception $e) {
