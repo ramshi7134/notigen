@@ -35,13 +35,25 @@ class TemplateNotification extends Notification implements ShouldQueue
     {
         $this->template = $template;
         $this->data = $data;
-        $this->channels = $channels;
+        $this->channels = array_filter($channels, function($channel) {
+            // Only allow mail channel for now to avoid Slack webhook issues
+            return $channel === 'mail';
+        });
 
-        Log::info('TemplateNotification created', [
-            'template' => $template->name,
-            'data' => $data,
-            'channels' => $channels
-        ]);
+        try {
+            Log::info('TemplateNotification created', [
+                'template' => $template->name,
+                'data' => $data,
+                'channels' => $this->channels
+            ]);
+        } catch (\Exception $e) {
+            // Fallback to error_log if Laravel logging fails
+            error_log('TemplateNotification created: ' . json_encode([
+                'template' => $template->name,
+                'data' => $data,
+                'channels' => $this->channels
+            ]));
+        }
 
         if (config('notigen.queue_notifications', true)) {
             $this->onQueue(config('notigen.default_queue', 'default'));
@@ -64,24 +76,27 @@ class TemplateNotification extends Notification implements ShouldQueue
         try {
             $renderedContent = $this->template->renderContent(['notifiable' => $notifiable] + $this->data);
             
-            Log::info('TemplateNotification email being sent', [
-                'to' => $notifiable->email ?? 'no_email_found',
-                'template' => $this->template->name,
-                'content' => $renderedContent,
-                'subject' => $this->renderSubject(),
-                'mailtrap_config' => [
-                    'driver' => config('mail.driver'),
-                    'host' => config('mail.host'),
-                    'port' => config('mail.port'),
-                    'from' => config('mail.from'),
-                ]
-            ]);
+            try {
+                error_log('TemplateNotification email preparation: ' . json_encode([
+                    'to' => $notifiable->email ?? 'no_email_found',
+                    'template' => $this->template->name,
+                    'subject' => $this->renderSubject()
+                ]));
+            } catch (\Exception $e) {
+                // Ignore logging errors
+            }
             
-            return (new MailMessage)
-                ->subject($this->renderSubject())
-                ->greeting('Hello ' . ($this->data['name'] ?? ''))
-                ->line($renderedContent)
-                ->salutation('Regards');
+            $message = new MailMessage;
+            $message->subject($this->renderSubject());
+            
+            if (!empty($this->data['name'])) {
+                $message->greeting('Hello ' . $this->data['name']);
+            }
+            
+            $message->line($renderedContent)
+                   ->salutation('Regards');
+                   
+            return $message;
         } catch (\Exception $e) {
             Log::error('TemplateNotification email failed', [
                 'error' => $e->getMessage(),
@@ -118,6 +133,11 @@ class TemplateNotification extends Notification implements ShouldQueue
      */
     protected function renderSubject(): string
     {
-        return $this->template->name;
+        try {
+            return $this->template->subject ?? $this->template->name ?? 'Notification';
+        } catch (\Exception $e) {
+            error_log('Error rendering subject: ' . $e->getMessage());
+            return 'Notification';
+        }
     }
 }
