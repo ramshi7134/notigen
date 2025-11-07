@@ -34,29 +34,39 @@ class Notigen
     /**
      * Send a notification using a template
      *
-     * @param string $templateName
-     * @param mixed $notifiable
-     * @param array $data
-     * @param array|null $channels
+     * @param string $uniqueKey The unique key of the template
+     * @param mixed $notifiable The entity to receive the notification
+     * @param array $data The data to use in the template
+     * @param array|null $channels Optional specific channels to use
      * @return void
+     * @throws \Exception When template is not found
      */
-    public function send(string $templateName, $notifiable, array $data, ?array $channels = null)
+    public function send(string $uniqueKey, $notifiable, array $data, ?array $channels = null)
     {
-        $template = $this->findTemplate($templateName);
+        $template = $this->findTemplate($uniqueKey);
         
-        if ($template) {
-            $template->send($notifiable, $data, $channels);
+        if (!$template) {
+            throw new \Exception("Template with key '{$uniqueKey}' not found.");
         }
+        
+        $template->send($notifiable, $data, $channels);
     }
 
     /**
-     * Find a template by name
+     * Find a template by key or name
      *
-     * @param string $name
+     * @param string $key
      * @return \Notigen\Models\NotificationTemplate|null
      */
-    public function findTemplate(string $name)
+    protected function findTemplate(string $key)
     {
-        return \Notigen\Models\NotificationTemplate::findByName($name);
+        $template = Models\NotificationTemplate::where('unique_key', $key)->first();
+        
+        if (!$template) {
+            // Fallback to name for backward compatibility
+            $template = Models\NotificationTemplate::where('name', $key)->first();
+        }
+        
+        return $template;
     }
 }
