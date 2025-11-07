@@ -28,10 +28,33 @@ class NotificationTemplate extends Model
 
     public function renderContent(array $data)
     {
-        $template = str_replace(['{', '}'], ['{{ ', ' }}'], $this->content);
-        return view('notigen::string-template', ['template' => $template])
-            ->with($data)
-            ->render();
+        try {
+            $template = str_replace(['{', '}'], ['{{ ', ' }}'], $this->content);
+            
+            \Illuminate\Support\Facades\Log::info('Rendering template content', [
+                'template_name' => $this->name,
+                'template_content' => $template,
+                'data' => $data
+            ]);
+            
+            $rendered = view('notigen::string-template', ['template' => $template])
+                ->with($data)
+                ->render();
+                
+            \Illuminate\Support\Facades\Log::info('Template rendered successfully', [
+                'template_name' => $this->name,
+                'rendered_content' => $rendered
+            ]);
+            
+            return $rendered;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Template rendering failed', [
+                'template_name' => $this->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**

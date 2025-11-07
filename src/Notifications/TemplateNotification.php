@@ -61,17 +61,34 @@ class TemplateNotification extends Notification implements ShouldQueue
      */
     public function toMail($notifiable): MailMessage
     {
-        $renderedContent = $this->template->renderContent(['notifiable' => $notifiable] + $this->data);
-        
-        Log::info('TemplateNotification email being sent', [
-            'to' => $notifiable->email ?? 'no_email_found',
-            'template' => $this->template->name,
-            'content' => $renderedContent
-        ]);
-        
-        return (new MailMessage)
-            ->subject($this->renderSubject())
-            ->line($renderedContent);
+        try {
+            $renderedContent = $this->template->renderContent(['notifiable' => $notifiable] + $this->data);
+            
+            Log::info('TemplateNotification email being sent', [
+                'to' => $notifiable->email ?? 'no_email_found',
+                'template' => $this->template->name,
+                'content' => $renderedContent,
+                'subject' => $this->renderSubject(),
+                'mailtrap_config' => [
+                    'driver' => config('mail.driver'),
+                    'host' => config('mail.host'),
+                    'port' => config('mail.port'),
+                    'from' => config('mail.from'),
+                ]
+            ]);
+            
+            return (new MailMessage)
+                ->subject($this->renderSubject())
+                ->greeting('Hello ' . ($this->data['name'] ?? ''))
+                ->line($renderedContent)
+                ->salutation('Regards');
+        } catch (\Exception $e) {
+            Log::error('TemplateNotification email failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**
