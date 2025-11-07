@@ -88,7 +88,18 @@ class TemplateNotification extends Notification implements ShouldQueue
             }
             
             $message = new MailMessage;
-            $message->subject($this->renderSubject());
+            
+            // Set subject (can contain variables)
+            $subject = $this->template->subject ?? $this->template->name;
+            $message->subject($this->renderTemplate($subject, $data));
+            
+            // Set CC and BCC if configured
+            if (!empty($this->template->cc)) {
+                $message->cc($this->template->cc);
+            }
+            if (!empty($this->template->bcc)) {
+                $message->bcc($this->template->bcc);
+            }
             
             // Get the rendered content and clean it up
             $renderedContent = $this->template->renderContent($data);
@@ -153,10 +164,21 @@ class TemplateNotification extends Notification implements ShouldQueue
     /**
      * Render the notification subject
      */
+    protected function renderTemplate(string $content, array $data): string
+    {
+        try {
+            return $this->template->replaceVariables($content, $data);
+        } catch (\Exception $e) {
+            error_log('Error rendering template: ' . $e->getMessage());
+            return $content;
+        }
+    }
+
     protected function renderSubject(): string
     {
         try {
-            return $this->template->subject ?? $this->template->name ?? 'Notification';
+            $subject = $this->template->subject ?? $this->template->name ?? 'Notification';
+            return $this->renderTemplate($subject, $this->data);
         } catch (\Exception $e) {
             error_log('Error rendering subject: ' . $e->getMessage());
             return 'Notification';

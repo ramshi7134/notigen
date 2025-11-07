@@ -10,15 +10,21 @@ class NotificationTemplate extends Model
 
     protected $fillable = [
         'name',
+        'unique_key',
         'description',
+        'subject',
         'channels',
         'content',
-        'variables'
+        'variables',
+        'cc',
+        'bcc'
     ];
 
     protected $casts = [
         'channels' => 'array',
-        'variables' => 'array'
+        'variables' => 'array',
+        'cc' => 'array',
+        'bcc' => 'array'
     ];
 
     public function getFormattedContentAttribute()
@@ -93,6 +99,11 @@ class NotificationTemplate extends Model
      * @param string $name
      * @return static|null
      */
+    public static function findByKey(string $key)
+    {
+        return static::where('unique_key', $key)->first();
+    }
+
     public static function findByName(string $name)
     {
         return static::where('name', $name)->first();
