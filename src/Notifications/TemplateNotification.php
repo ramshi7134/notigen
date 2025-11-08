@@ -80,8 +80,7 @@ class TemplateNotification extends Notification implements ShouldQueue
                 error_log('TemplateNotification email preparation: ' . json_encode([
                     'to' => $notifiable->email ?? 'no_email_found',
                     'template' => $this->template->name,
-                    'data' => $data,
-                    'subject' => $this->renderSubject()
+                    'data' => $data
                 ]));
             } catch (\Exception $e) {
                 // Ignore logging errors
@@ -89,16 +88,18 @@ class TemplateNotification extends Notification implements ShouldQueue
             
             $message = new MailMessage;
             
-            // Set subject (can contain variables)
-            $subject = $this->template->subject ?? $this->template->name;
-            $message->subject($this->renderTemplate($subject, $data));
+            // Set and render subject with variables
+            $renderedSubject = $this->renderSubject();
+            $message->subject($renderedSubject);
             
-            // Set CC and BCC if configured
-            if (!empty($this->template->cc)) {
-                $message->cc($this->template->cc);
-            }
-            if (!empty($this->template->bcc)) {
-                $message->bcc($this->template->bcc);
+            try {
+                error_log('TemplateNotification subject rendered: ' . json_encode([
+                    'subject_template' => $this->template->subject,
+                    'rendered_subject' => $renderedSubject,
+                    'data' => $this->data
+                ]));
+            } catch (\Exception $e) {
+                // Ignore logging errors
             }
             
             // Get the rendered content and clean it up
@@ -162,23 +163,15 @@ class TemplateNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Render the notification subject
+     * Render the notification subject with variables
      */
-    protected function renderTemplate(string $content, array $data): string
-    {
-        try {
-            return $this->template->replaceVariables($content, $data);
-        } catch (\Exception $e) {
-            error_log('Error rendering template: ' . $e->getMessage());
-            return $content;
-        }
-    }
-
     protected function renderSubject(): string
     {
         try {
             $subject = $this->template->subject ?? $this->template->name ?? 'Notification';
-            return $this->renderTemplate($subject, $this->data);
+            
+            // Use the same variable replacement for subject as content
+            return $this->template->replaceVariables($subject, $this->data);
         } catch (\Exception $e) {
             error_log('Error rendering subject: ' . $e->getMessage());
             return 'Notification';
