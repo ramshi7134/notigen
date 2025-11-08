@@ -10,7 +10,7 @@ class NotificationTemplate extends Model
 
     protected $fillable = [
         'name',
-        'unique_key',
+        'template_key',
         'description',
         'subject',
         'channels',

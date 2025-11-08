@@ -34,19 +34,19 @@ class Notigen
     /**
      * Send a notification using a template
      *
-     * @param string $templateKey The unique key of the template
+     * @param string $uniqueKey The unique key of the template
      * @param mixed $notifiable The entity to receive the notification
      * @param array $data The data to use in the template
      * @param array|null $channels Optional specific channels to use
      * @return void
      * @throws \Exception When template is not found
      */
-    public function send(string $templateKey, $notifiable, array $data, ?array $channels = null)
+    public function send(string $uniqueKey, $notifiable, array $data, ?array $channels = null)
     {
-        $template = $this->findTemplate($templateKey);
+        $template = $this->findTemplate($uniqueKey);
         
         if (!$template) {
-            throw new \Exception("Template with key '{$templateKey}' not found.");
+            throw new \Exception("Template with key '{$uniqueKey}' not found.");
         }
         
         $template->send($notifiable, $data, $channels);
@@ -60,7 +60,7 @@ class Notigen
      */
     protected function findTemplate(string $key)
     {
-        $template = Models\NotificationTemplate::where('template_key', $key)->first();
+        $template = Models\NotificationTemplate::where('unique_key', $key)->first();
         
         if (!$template) {
             // Fallback to name for backward compatibility
