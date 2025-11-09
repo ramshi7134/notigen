@@ -25,8 +25,10 @@
 
                             <div class="mb-3">
                                 <label for="subject" class="form-label">Subject</label>
-                                <input type="text" class="form-control" id="subject" name="subject" placeholder="Email subject line">
-                                <small class="form-text text-muted">You can use variables like {name} or {{ name }}</small>
+                                <input type="text" class="form-control" id="subject" name="subject"
+                                    placeholder="Email subject line">
+                                <small class="form-text text-muted">You can use variables like {name} in your
+                                    subject</small>
                             </div>
 
                             <div class="mb-3">
