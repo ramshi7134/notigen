@@ -167,21 +167,38 @@ class NotigenController extends Controller
      */
     public function checkKey(Request $request)
     {
-        $key = $request->query('key');
-        $id = $request->query('id');
+        try {
+            $key = $request->input('key');
+            $id = $request->input('id');
 
-        $query = NotificationTemplate::where('template_key', $key);
-        
-        // Exclude current template when checking
-        if ($id) {
-            $query->where('id', '!=', $id);
-        }
+            if (empty($key)) {
+                return response()->json([
+                    'available' => false,
+                    'message' => 'Template key is required'
+                ], 400);
+            }
 
-        $exists = $query->exists();
+            // Validate key format
+            if (!preg_match('/^[a-z0-9_-]+$/', $key)) {
+                return response()->json([
+                    'available' => false,
+                    'message' => 'Invalid key format'
+                ], 400);
+            }
 
-        return response()->json([
-            'available' => !$exists,
-            'key' => $key
-        ]);
+            $query = NotificationTemplate::where('template_key', $key);
+            
+            // Exclude current template when checking
+            if ($id) {
+                $query->where('id', '!=', $id);
+            }
+
+            $exists = $query->exists();
+
+            return response()->json([
+                'available' => !$exists,
+                'key' => $key,
+                'message' => $exists ? 'Key is already in use' : 'Key is available'
+            ]);
     }
 }

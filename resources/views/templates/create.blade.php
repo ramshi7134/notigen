@@ -213,7 +213,7 @@
                 const baseKey = name.toLowerCase()
                     .replace(/[^\w\s-]/g, '')
                     .replace(/\s+/g, '_');
-                
+
                 return `${baseKey}_${timestamp}_${randomStr}`;
             }
 
@@ -251,11 +251,13 @@
             }
 
             document.addEventListener('DOMContentLoaded', function() {
-                // Template Key Validation and Generation
-                const templateKeyInput = document.getElementById('template_key');
-                const templateKeyStatus = document.getElementById('template_key_status');
-                const generateKeyBtn = document.querySelector('.generate-key');
-                let keyCheckTimeout;                        function validateTemplateKey(key) {
+                        // Template Key Validation and Generation
+                        const templateKeyInput = document.getElementById('template_key');
+                        const templateKeyStatus = document.getElementById('template_key_status');
+                        const generateKeyBtn = document.querySelector('.generate-key');
+                        let keyCheckTimeout;
+
+                        function validateTemplateKey(key) {
                             if (!key) return;
 
                             // Clear previous timeout
@@ -263,19 +265,24 @@
 
                             // Set new timeout to check key
                             keyCheckTimeout = setTimeout(() => {
-                                fetch(`{{ route('notigen.check-key') }}?key=${key}`)
-                                    .then(response => response.json())
-                                    .then(data => {
+                                $.get('{{ route('notigen.check-key') }}', { key: key })
+                                    .done(function(data) {
                                         if (data.available) {
-                                            templateKeyStatus.innerHTML =
-                                                '<i class="fas fa-check-circle text-success me-1"></i> Template key is available';
+                                            $('#template_key_status').html(
+                                                '<i class="fas fa-check-circle text-success me-1"></i> Template key is available'
+                                            );
                                             templateKeyInput.setCustomValidity('');
                                         } else {
-                                            templateKeyStatus.innerHTML =
-                                                '<i class="fas fa-exclamation-circle text-danger me-1"></i> This template key is already in use';
-                                            templateKeyInput.setCustomValidity(
-                                                'This template key is already in use');
+                                            $('#template_key_status').html(
+                                                '<i class="fas fa-exclamation-circle text-danger me-1"></i> This template key is already in use'
+                                            );
+                                            templateKeyInput.setCustomValidity('This template key is already in use');
                                         }
+                                    })
+                                    .fail(function() {
+                                        $('#template_key_status').html(
+                                            '<i class="fas fa-exclamation-circle text-warning me-1"></i> Could not verify key availability'
+                                        );
                                     });
                             }, 500);
                         }
