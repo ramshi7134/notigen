@@ -24,6 +24,12 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="subject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="subject" name="subject" placeholder="Email subject line">
+                                <small class="form-text text-muted">You can use variables like {name} or {{ name }}</small>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="channels" class="form-label">Channels</label>
                                 <select class="form-control" id="channels" name="channels[]" multiple required>
                                     @foreach (config('notigen.default_channels', ['mail']) as $channel)

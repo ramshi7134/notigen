@@ -26,6 +26,14 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="subject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="subject" name="subject" 
+                                       value="{{ old('subject', $template->subject) }}" 
+                                       placeholder="Email subject line">
+                                <small class="form-text text-muted">You can use variables like {name} or {{ name }}</small>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="channels" class="form-label">Channels</label>
                                 <select class="form-control" id="channels" name="channels[]" multiple required>
                                     @foreach ($channels as $channel)
