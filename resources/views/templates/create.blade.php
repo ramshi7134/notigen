@@ -59,6 +59,50 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(74, 144, 226, 0.25);
         }
+
+        /* Variable Row Animations */
+        .variable-row {
+            transition: all 0.3s ease;
+            transform-origin: top;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .variable-row.removing {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Form Validation Styles */
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
     </style>
 @endpush
 
@@ -162,34 +206,11 @@
                                     </button>
                                 </div>
                                 <div id="variables-container" class="card bg-light border-0 p-3">
-                                    <div class="row mb-2 variable-row">
-                                        <div class="col-md-5">
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-white">
-                                                    <i class="fas fa-tag"></i>
-                                                </span>
-                                                <input type="text" class="form-control shadow-sm"
-                                                    name="variables[0][name]"
-                                                    placeholder="Variable Name (e.g., user_name)">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="input-group">
-                                                <span class="input-group-text bg-white">
-                                                    <i class="fas fa-info"></i>
-                                                </span>
-                                                <input type="text" class="form-control shadow-sm"
-                                                    name="variables[0][description]"
-                                                    placeholder="Description (e.g., User's full name)">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <button type="button"
-                                                class="btn btn-outline-danger btn-sm w-100 remove-variable" disabled>
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <!-- Variable rows will be added here by JavaScript -->
+                                </div>
+                                <div class="form-text mt-2" id="variables-error" style="display: none;">
+                                    <i class="fas fa-exclamation-circle text-danger me-1"></i>
+                                    Please add at least one valid variable
                                 </div>
                             </div>
 
@@ -207,137 +228,21 @@
 
     @push('scripts')
         <script>
-            function generateTemplateKey(name) {
-                const timestamp = new Date().getTime();
-                const randomStr = Math.random().toString(36).substring(2, 8);
-                const baseKey = name.toLowerCase()
-                    .replace(/[^\w\s-]/g, '')
-                    .replace(/\s+/g, '_');
-
-                return `${baseKey}_${timestamp}_${randomStr}`;
-            }
-
-            function addVariableRow(container, index) {
-                const row = `
-                    <div class="row mb-2 variable-row">
-                        <div class="col-md-5">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white">
-                                    <i class="fas fa-tag"></i>
-                                </span>
-                                <input type="text" class="form-control shadow-sm" 
-                                    name="variables[${index}][name]" 
-                                    placeholder="Variable Name (e.g., user_name)">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white">
-                                    <i class="fas fa-info"></i>
-                                </span>
-                                <input type="text" class="form-control shadow-sm" 
-                                    name="variables[${index}][description]"
-                                    placeholder="Description (e.g., User's full name)">
-                            </div>
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-variable">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', row);
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                        // Template Key Validation and Generation
-                        const templateKeyInput = document.getElementById('template_key');
-                        const templateKeyStatus = document.getElementById('template_key_status');
-                        const generateKeyBtn = document.querySelector('.generate-key');
-                        let keyCheckTimeout;
-
-                        function validateTemplateKey(key) {
-                            if (!key) return;
-
-                            // Clear previous timeout
-                            if (keyCheckTimeout) clearTimeout(keyCheckTimeout);
-
-                            // Set new timeout to check key
-                            keyCheckTimeout = setTimeout(() => {
-                                $.get('{{ route('notigen.check-key') }}', { key: key })
-                                    .done(function(data) {
-                                        if (data.available) {
-                                            $('#template_key_status').html(
-                                                '<i class="fas fa-check-circle text-success me-1"></i> Template key is available'
-                                            );
-                                            templateKeyInput.setCustomValidity('');
-                                        } else {
-                                            $('#template_key_status').html(
-                                                '<i class="fas fa-exclamation-circle text-danger me-1"></i> This template key is already in use'
-                                            );
-                                            templateKeyInput.setCustomValidity('This template key is already in use');
-                                        }
-                                    })
-                                    .fail(function() {
-                                        $('#template_key_status').html(
-                                            '<i class="fas fa-exclamation-circle text-warning me-1"></i> Could not verify key availability'
-                                        );
-                                    });
-                            }, 500);
-                        }
-
-                        // Generate initial key when name is typed
-                        document.getElementById('name').addEventListener('input', function() {
-                            if (!templateKeyInput.value) {
-                                const timestamp = new Date().getTime();
-                                const randomStr = Math.random().toString(36).substring(2, 8);
-                                const baseKey = this.value.toLowerCase()
-                                    .replace(/[^\w\s-]/g, '')
-                                    .replace(/\s+/g, '_');
-
-                                const newKey = `${baseKey}_${timestamp}_${randomStr}`;
-                                templateKeyInput.value = newKey;
-                                validateTemplateKey(newKey);
-                            }
-                        });
-
-                        // Validate key on input
-                        templateKeyInput.addEventListener('input', function() {
-                            const key = this.value.toLowerCase();
-                            this.value = key; // Force lowercase
-                            validateTemplateKey(key);
-                        });
-
-                        // Generate new key
-                        generateKeyBtn.addEventListener('click', function() {
-                            const timestamp = new Date().getTime();
-                            const randomStr = Math.random().toString(36).substring(2, 8);
-                            const name = document.getElementById('name').value;
-                            const baseKey = name.toLowerCase()
-                                .replace(/[^\w\s-]/g, '')
-                                .replace(/\s+/g, '_');
-
-                            const newKey = `${baseKey}_${timestamp}_${randomStr}`;
-                            templateKeyInput.value = newKey;
-                            validateTemplateKey(newKey);
-                        });
-
-                        // Variables Container Management
-                        const container = document.getElementById('variables-container');
-
-                        document.getElementById('add-variable').addEventListener('click', function() {
-                            const index = container.children.length;
-                            const template = `
+            $(document).ready(function() {
+                // Function to create a variable row
+                function createVariableRow(index) {
+                    return `
                         <div class="row mb-2 variable-row" data-index="${index}">
                             <div class="col-md-5">
                                 <div class="input-group">
                                     <span class="input-group-text bg-white">
                                         <i class="fas fa-tag"></i>
                                     </span>
-                                    <input type="text" class="form-control shadow-sm" 
+                                    <input type="text" class="form-control shadow-sm variable-name" 
                                         name="variables[${index}][name]" 
-                                        placeholder="Variable Name (e.g., user_name)">
+                                        placeholder="Variable Name (e.g., user_name)"
+                                        required>
+                                    <div class="invalid-feedback">Please enter a valid variable name</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -347,25 +252,156 @@
                                     </span>
                                     <input type="text" class="form-control shadow-sm" 
                                         name="variables[${index}][description]"
-                                        placeholder="Description (e.g., User's full name)">
+                                        placeholder="Description (e.g., User's full name)"
+                                        required>
+                                    <div class="invalid-feedback">Please enter a description</div>
                                 </div>
                             </div>
                             <div class="col-md-1">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-variable">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-variable"
+                                    ${index === 0 ? 'disabled' : ''}>
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
                     `;
+                }
 
-                            container.insertAdjacentHTML('beforeend', template);
-                        });
-
-                        document.getElementById('variables-container').addEventListener('click', function(e) {
-                            if (e.target.classList.contains('remove-variable') && !e.target.disabled) {
-                                e.target.closest('.row').remove();
+                // Function to reindex variables
+                function reindexVariables() {
+                    $('#variables-container .variable-row').each(function(index) {
+                        $(this).attr('data-index', index);
+                        $(this).find('input').each(function() {
+                            const name = $(this).attr('name');
+                            if (name) {
+                                $(this).attr('name', name.replace(/\[\d+\]/, `[${index}]`));
                             }
                         });
+                        $(this).find('.remove-variable').prop('disabled', index === 0);
+                    });
+                }
+
+                // Add initial variable row
+                $('#variables-container').empty().append(createVariableRow(0));
+
+                // Handle add variable button
+                $('#add-variable').on('click', function() {
+                    const newIndex = $('#variables-container .variable-row').length;
+                    const newRow = $(createVariableRow(newIndex));
+                    $('#variables-container').append(newRow);
+                    newRow.hide().fadeIn(300);
+                });
+
+                // Handle remove variable button
+                $('#variables-container').on('click', '.remove-variable', function() {
+                    if (!$(this).prop('disabled')) {
+                        const row = $(this).closest('.variable-row');
+                        row.fadeOut(300, function() {
+                            row.remove();
+                            reindexVariables();
+                        });
+                    }
+                });
+
+                // Variable name validation
+                $('#variables-container').on('input', '.variable-name', function() {
+                    const value = $(this).val();
+                    const valid = /^[a-z][a-z0-9_]*$/.test(value);
+
+                    if (!valid && value) {
+                        $(this).addClass('is-invalid')
+                            .next('.invalid-feedback')
+                            .text(
+                                'Only lowercase letters, numbers, and underscores allowed. Must start with a letter.'
+                                );
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                // Form validation
+                $('form').on('submit', function(e) {
+                    let isValid = true;
+
+                    // Validate variable names
+                    $('#variables-container .variable-name').each(function() {
+                        const value = $(this).val();
+                        if (!value || !/^[a-z][a-z0-9_]*$/.test(value)) {
+                            $(this).addClass('is-invalid');
+                            isValid = false;
+                        }
+                    });
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
+                // Template Key Management
+                function generateTemplateKey(name) {
+                    const timestamp = Date.now();
+                    const random = Math.random().toString(36).substring(2, 8);
+                    const baseKey = (name || 'template').toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .replace(/\s+/g, '_')
+                        .replace(/-+/g, '_');
+
+                    return `${baseKey}_${timestamp}_${random}`;
+                }
+
+                // Generate key on name input
+                $('#name').on('input', function() {
+                    if (!$('#template_key').val()) {
+                        const newKey = generateTemplateKey($(this).val());
+                        $('#template_key').val(newKey).trigger('input');
+                    }
+                });
+
+                // Generate new key button
+                $('.generate-key').on('click', function() {
+                    const newKey = generateTemplateKey($('#name').val());
+                    $('#template_key').val(newKey).trigger('input');
+                });
+
+                // Key validation
+                let keyCheckTimeout;
+                $('#template_key').on('input', function() {
+                    const key = $(this).val().toLowerCase();
+                    $(this).val(key);
+
+                    clearTimeout(keyCheckTimeout);
+                    keyCheckTimeout = setTimeout(() => {
+                        const $status = $('#template_key_status');
+                        $status.html(
+                            '<i class="fas fa-spinner fa-spin text-primary me-1"></i> Checking availability...'
+                            );
+
+                        $.get('{{ route('notigen.check-key') }}', {
+                                key
+                            })
+                            .done(function(response) {
+                                if (response.available) {
+                                    $status.html(
+                                        '<i class="fas fa-check-circle text-success me-1"></i> Template key is available'
+                                        );
+                                    $('#template_key')[0].setCustomValidity('');
+                                } else {
+                                    $status.html(
+                                        '<i class="fas fa-exclamation-circle text-danger me-1"></i> ' +
+                                        response.message);
+                                    $('#template_key')[0].setCustomValidity(
+                                        'This template key is already in use');
+                                }
+                            })
+                            .fail(function() {
+                                $status.html(
+                                    '<i class="fas fa-exclamation-circle text-warning me-1"></i> Could not verify key availability'
+                                    );
+                            });
+                    }, 500);
+                });
+            });
         </script>
     @endpush
 @endsection
