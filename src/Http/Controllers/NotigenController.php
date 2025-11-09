@@ -3,27 +3,40 @@
 namespace Notigen\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\View\View;
 use Notigen\Models\NotificationTemplate;
+use Illuminate\Support\Str;
 
 class NotigenController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of notification templates.
+     */
+    public function index(): View
     {
-        $templates = NotificationTemplate::latest()->get();
+        $templates = NotificationTemplate::latest()->paginate(10);
         return view('notigen::templates.index', compact('templates'));
     }
 
-    public function create()
+    /**
+     * Show the form for creating a new template.
+     */
+    public function create(): View
     {
         $channels = config('notigen.default_channels', ['mail']);
         return view('notigen::templates.create', compact('channels'));
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created template.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255'],
             'template_key' => [
                 'required',
                 'string',
@@ -31,13 +44,22 @@ class NotigenController extends Controller
                 'regex:/^[a-z0-9_-]+$/',
                 'unique:notification_templates,template_key'
             ],
-            'description' => 'nullable|string',
-            'channels' => 'required|array',
-            'channels.*' => 'string|in:' . implode(',', config('notigen.default_channels', ['mail'])),
-            'content' => 'required|string',
-            'variables' => 'nullable|array',
-            'variables.*.name' => 'required|string',
-            'variables.*.description' => 'nullable|string',
+            'description' => ['nullable', 'string'],
+            'channels' => ['required', 'array'],
+            'channels.*' => [
+                'string',
+                'in:' . implode(',', config('notigen.default_channels', ['mail']))
+            ],
+            'content' => ['required', 'string'],
+            'subject' => ['nullable', 'string', 'max:255'],
+            'variables' => ['nullable', 'array'],
+            'variables.*.name' => [
+                'required',
+                'string',
+                'regex:/^[a-z][a-z0-9_]*$/'
+            ],
+            'variables.*.description' => ['nullable', 'string'],
+            'variables.*.required' => ['nullable', 'boolean'],
         ]);
 
         $template = NotificationTemplate::create([
@@ -54,32 +76,40 @@ class NotigenController extends Controller
             ->with('success', 'Template created successfully.');
     }
 
-    public function show($id)
+    /**
+     * Display the specified template.
+     */
+    public function show(int $id): View
     {
         $template = NotificationTemplate::findOrFail($id);
         return view('notigen::templates.show', compact('template'));
     }
 
-    public function edit($id)
+    /**
+     * Show the form for editing the specified template.
+     */
+    public function edit(int $id): View
     {
         $template = NotificationTemplate::findOrFail($id);
         $channels = config('notigen.default_channels', ['mail']);
         return view('notigen::templates.edit', compact('template', 'channels'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update the specified template.
+     */
+    public function update(Request $request, int $id): RedirectResponse
     {
         $template = NotificationTemplate::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255'],
             'template_key' => [
                 'required',
                 'string',
                 'max:255',
                 'regex:/^[a-z0-9_-]+$/',
                 function ($attribute, $value, $fail) use ($template) {
-                    // Check if key is unique except for current template
                     if (NotificationTemplate::where('template_key', $value)
                         ->where('id', '!=', $template->id)
                         ->exists()) {
@@ -87,13 +117,22 @@ class NotigenController extends Controller
                     }
                 },
             ],
-            'description' => 'nullable|string',
-            'channels' => 'required|array',
-            'channels.*' => 'string|in:' . implode(',', config('notigen.default_channels', ['mail'])),
-            'content' => 'required|string',
-            'variables' => 'nullable|array',
-            'variables.*.name' => 'required|string',
-            'variables.*.description' => 'nullable|string',
+            'description' => ['nullable', 'string'],
+            'channels' => ['required', 'array'],
+            'channels.*' => [
+                'string',
+                'in:' . implode(',', config('notigen.default_channels', ['mail']))
+            ],
+            'content' => ['required', 'string'],
+            'subject' => ['nullable', 'string', 'max:255'],
+            'variables' => ['nullable', 'array'],
+            'variables.*.name' => [
+                'required',
+                'string',
+                'regex:/^[a-z][a-z0-9_]*$/'
+            ],
+            'variables.*.description' => ['nullable', 'string'],
+            'variables.*.required' => ['nullable', 'boolean'],
         ]);
 
         $template->update([
@@ -110,7 +149,10 @@ class NotigenController extends Controller
             ->with('success', 'Template updated successfully.');
     }
 
-    public function destroy($id)
+    /**
+     * Remove the specified template.
+     */
+    public function destroy(int $id): RedirectResponse
     {
         $template = NotificationTemplate::findOrFail($id);
         $template->delete();
@@ -120,39 +162,46 @@ class NotigenController extends Controller
             ->with('success', 'Template deleted successfully.');
     }
 
-    public function preview(Request $request, $id)
+    /**
+     * Preview template with test data.
+     */
+    public function preview(Request $request, int $id): JsonResponse
     {
         $template = NotificationTemplate::findOrFail($id);
-        $data = $request->validate([
-            'variables' => 'required|array',
-        ]);
+        
+        try {
+            $data = $request->validate([
+                'variables' => ['required', 'array'],
+                'variables.*' => ['required'],
+            ]);
 
-        return response()->json([
-            'content' => $template->renderContent($data['variables'])
-        ]);
+            $content = $template->renderContent($data['variables']);
+
+            return response()->json([
+                'success' => true,
+                'content' => $content
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
-     * Generate a unique template key based on the template name
-     *
-     * @param string $name
-     * @return string
+     * Generate a unique template key based on the template name.
      */
     protected function generateUniqueTemplateKey(string $name): string
     {
-        // Convert name to slug
-        $baseKey = str_slug($name);
-        
-        // Add timestamp and random string
+        $baseKey = Str::slug($name);
         $timestamp = now()->format('YmdHis');
-        $randomStr = strtoupper(str_random(6));
+        $randomStr = strtoupper(Str::random(6));
         
-        // Combine all parts to create a unique key
         $templateKey = "{$baseKey}_{$timestamp}_{$randomStr}";
         
-        // Verify uniqueness
         while (NotificationTemplate::where('template_key', $templateKey)->exists()) {
-            $randomStr = strtoupper(str_random(6));
+            $randomStr = strtoupper(Str::random(6));
             $templateKey = "{$baseKey}_{$timestamp}_{$randomStr}";
         }
         
@@ -160,45 +209,36 @@ class NotigenController extends Controller
     }
 
     /**
-     * Check if a template key is available
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Check if a template key is available.
      */
-    public function checkKey(Request $request)
+    public function checkKey(Request $request): JsonResponse
     {
         try {
-            $key = $request->input('key');
-            $id = $request->input('id');
+            $validated = $request->validate([
+                'key' => ['required', 'string', 'regex:/^[a-z0-9_-]+$/'],
+                'id' => ['nullable', 'integer', 'exists:notification_templates,id'],
+            ]);
 
-            if (empty($key)) {
-                return response()->json([
-                    'available' => false,
-                    'message' => 'Template key is required'
-                ], 400);
-            }
-
-            // Validate key format
-            if (!preg_match('/^[a-z0-9_-]+$/', $key)) {
-                return response()->json([
-                    'available' => false,
-                    'message' => 'Invalid key format'
-                ], 400);
-            }
-
-            $query = NotificationTemplate::where('template_key', $key);
+            $query = NotificationTemplate::where('template_key', $validated['key']);
             
-            // Exclude current template when checking
-            if ($id) {
-                $query->where('id', '!=', $id);
+            if (!empty($validated['id'])) {
+                $query->where('id', '!=', $validated['id']);
             }
 
             $exists = $query->exists();
 
             return response()->json([
+                'success' => true,
                 'available' => !$exists,
-                'key' => $key,
-                'message' => $exists ? 'Key is already in use' : 'Key is available'
+                'key' => $validated['key'],
+                'message' => $exists ? 'This template key is already in use.' : 'This template key is available.'
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'available' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 }
