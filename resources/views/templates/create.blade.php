@@ -207,14 +207,55 @@
 
     @push('scripts')
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                        // Template Key Validation and Generation
-                        const templateKeyInput = document.getElementById('template_key');
-                        const templateKeyStatus = document.getElementById('template_key_status');
-                        const generateKeyBtn = document.querySelector('.generate-key');
-                        let keyCheckTimeout;
+            function generateTemplateKey(name) {
+                const timestamp = new Date().getTime();
+                const randomStr = Math.random().toString(36).substring(2, 8);
+                const baseKey = name.toLowerCase()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '_');
+                
+                return `${baseKey}_${timestamp}_${randomStr}`;
+            }
 
-                        function validateTemplateKey(key) {
+            function addVariableRow(container, index) {
+                const row = `
+                    <div class="row mb-2 variable-row">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-tag"></i>
+                                </span>
+                                <input type="text" class="form-control shadow-sm" 
+                                    name="variables[${index}][name]" 
+                                    placeholder="Variable Name (e.g., user_name)">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-info"></i>
+                                </span>
+                                <input type="text" class="form-control shadow-sm" 
+                                    name="variables[${index}][description]"
+                                    placeholder="Description (e.g., User's full name)">
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-variable">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', row);
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Template Key Validation and Generation
+                const templateKeyInput = document.getElementById('template_key');
+                const templateKeyStatus = document.getElementById('template_key_status');
+                const generateKeyBtn = document.querySelector('.generate-key');
+                let keyCheckTimeout;                        function validateTemplateKey(key) {
                             if (!key) return;
 
                             // Clear previous timeout

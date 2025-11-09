@@ -1,5 +1,6 @@
 {
     "name": "webpacks/notigen",
+    "version": "1.5.0",
     "description": "A Laravel package that simplifies the process of creating, managing, and sending custom notifications",
     "type": "library",
     "keywords": [
