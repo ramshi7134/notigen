@@ -39,6 +39,30 @@
     @yield('content')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Add copy functionality for template keys
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.copy-key').forEach(button => {
+                button.addEventListener('click', function() {
+                    const key = this.getAttribute('data-key');
+                    navigator.clipboard.writeText(key).then(() => {
+                        // Change button appearance temporarily
+                        const originalHTML = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-check"></i>';
+                        this.classList.add('btn-success');
+                        this.classList.remove('btn-outline-secondary');
+
+                        setTimeout(() => {
+                            this.innerHTML = originalHTML;
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-outline-secondary');
+                        }, 2000);
+                    });
+                });
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 

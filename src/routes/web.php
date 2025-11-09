@@ -11,6 +11,7 @@ Route::group([
     Route::get('/create', [NotigenController::class, 'create'])->name('notigen.create');
     Route::post('/', [NotigenController::class, 'store'])->name('notigen.store');
     Route::post('/{template}/preview', [NotigenController::class, 'preview'])->name('notigen.preview');
+    Route::get('/check-key', [NotigenController::class, 'checkKey'])->name('notigen.check-key');
     Route::get('/{template}', [NotigenController::class, 'show'])->name('notigen.show');
     Route::get('/{template}/edit', [NotigenController::class, 'edit'])->name('notigen.edit');
     Route::put('/{template}', [NotigenController::class, 'update'])->name('notigen.update');

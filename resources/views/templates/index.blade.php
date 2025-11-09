@@ -14,6 +14,7 @@
                             <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>Template Key</th>
                                     <th>Type</th>
                                     <th>Created At</th>
                                     <th>Actions</th>
@@ -23,6 +24,13 @@
                                 @forelse($templates as $template)
                                     <tr>
                                         <td>{{ $template->name }}</td>
+                                        <td>
+                                            <code>{{ $template->template_key }}</code>
+                                            <button class="btn btn-sm btn-outline-secondary copy-key"
+                                                data-key="{{ $template->template_key }}" title="Copy template key">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </td>
                                         <td>{{ $template->channels[0] ?? 'mail' }}</td>
                                         <td>{{ $template->created_at->format('Y-m-d H:i') }}</td>
                                         <td>

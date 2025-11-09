@@ -14,6 +14,17 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-4">
+                        <h5>Template Key</h5>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ $template->template_key }}" readonly>
+                            <button class="btn btn-outline-secondary copy-key" type="button" data-key="{{ $template->template_key }}">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                        <small class="text-muted">Use this key to reference this template in your code.</small>
+                    </div>
+                    
+                    <div class="mb-4">
                         <h5>Description</h5>
                         <p>{{ $template->description ?: 'No description provided.' }}</p>
                     </div>
