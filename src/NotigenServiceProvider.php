@@ -40,14 +40,20 @@ class NotigenServiceProvider extends ServiceProvider
         // Load views
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'notigen');
 
+        // Register mail components and views
+        $this->loadViewComponentsAs('mail', []);
+        $this->loadViewsFrom(__DIR__.'/../resources/views/mail', 'mail');
+
         // Load migrations
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         // Register publishable resources
         if ($this->app->runningInConsole()) {
-            // Publish config
+            // Publish config and views
             $this->publishes([
                 __DIR__.'/../config/notigen.php' => config_path('notigen.php'),
+                __DIR__.'/../resources/views' => resource_path('views/vendor/notigen'),
+                __DIR__.'/../resources/views/mail' => resource_path('views/vendor/mail'),
             ], 'notigen-config');
 
             // Publish migrations
