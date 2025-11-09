@@ -1,47 +1,157 @@
 # Notigen
 
-A Laravel package that simplifies the process of creating, managing, and sending custom notifications.
+A Laravel package for managing notification templates with variable support and multiple channel capabilities. Create, manage, and send notifications with a beautiful web interface.
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require webpacks/notigen
+composer require ramsheedm/notigen
 ```
 
-## Configuration
+## Setup
 
-Publish the configuration file:
+1. Publish the assets and config:
 
 ```bash
-php artisan vendor:publish --tag="notigen-config"
+php artisan vendor:publish --provider="RamsheedM\Notigen\NotigenServiceProvider"
+```
+
+2. Run migrations:
+
+```bash
+php artisan migrate
+```
+
+3. Add the service provider to `config/app.php` if not auto-discovered:
+
+```php
+'providers' => [
+    // ...
+    RamsheedM\Notigen\NotigenServiceProvider::class,
+],
+
+'aliases' => [
+    // ...
+    'Notigen' => RamsheedM\Notigen\Facades\Notigen::class,
+]
 ```
 
 ## Usage
 
-### Creating a New Notification
+### 1. Web Interface
 
-You can create a new notification using the following command:
+Access the web interface at `/notigen` to manage your notification templates:
 
-```bash
-php artisan make:notification-custom UserWelcome --channels=mail,database,slack
+- Create new templates with variables
+- Preview templates with test data
+- Manage existing templates
+- Configure notification channels
+
+### 2. Programmatic Usage
+
+#### Create a Template:
+
+```php
+use RamsheedM\Notigen\Facades\Notigen;
+
+$template = Notigen::createTemplate([
+    'name' => 'Welcome Email',
+    'template_key' => 'welcome_email', // Optional, will be auto-generated
+    'content' => 'Hello {user_name}, Welcome to {app_name}!',
+    'variables' => [
+        ['name' => 'user_name', 'description' => "User's full name"],
+        ['name' => 'app_name', 'description' => 'Application name']
+    ],
+    'channels' => ['mail', 'database'], // Optional, defaults to ['mail']
+    'subject' => 'Welcome to {app_name}', // Optional, for email channel
+    'description' => 'Template for welcome emails' // Optional
+]);
 ```
 
-This will create a new notification class with the specified channels.
+#### Send Notifications:
 
-### Available Options
+```php
+// Using template key
+Notigen::send('welcome_email', [
+    'user_name' => 'John Doe',
+    'app_name' => 'My App'
+], $user); // $user is the notifiable entity
 
-- `--channels`: Specify the notification channels (mail, database, slack, etc.)
+// Or using template object
+$template = Notigen::getTemplate('welcome_email');
+$template->send([
+    'user_name' => 'John Doe',
+    'app_name' => 'My App'
+], $user);
+```
 
-### Configuration Options
+#### Preview Content:
 
-You can configure the following options in the `config/notigen.php` file:
+```php
+// Preview with variables replaced
+$content = Notigen::preview('welcome_email', [
+    'user_name' => 'John Doe',
+    'app_name' => 'My App'
+]);
+```
 
-- `default_channels`: Default notification channels
-- `templates_path`: Custom templates path
-- `queue_notifications`: Enable/disable queue by default
-- `default_queue`: Default queue name for notifications
+#### Template Management:
+
+```php
+// Get all templates
+$templates = Notigen::getAllTemplates();
+
+// Get a specific template
+$template = Notigen::getTemplate('welcome_email');
+
+// Update a template
+Notigen::updateTemplate('welcome_email', [
+    'content' => 'New content with {user_name}',
+    'variables' => [
+        ['name' => 'user_name', 'description' => 'Updated description']
+    ]
+]);
+
+// Delete a template
+Notigen::deleteTemplate('welcome_email');
+```
+
+### Configuration
+
+Configuration options in `config/notigen.php`:
+
+```php
+return [
+    // Default notification channels
+    'default_channels' => ['mail'],
+
+    // Route prefix for the web interface
+    'route_prefix' => 'notigen',
+
+    // Middleware for the web interface
+    'middleware' => ['web', 'auth'],
+
+    // Database table names
+    'tables' => [
+        'templates' => 'notification_templates',
+        'variables' => 'template_variables'
+    ]
+];
+```
+
+## Features
+
+- ✨ Beautiful web interface for template management
+- 📝 Variable support with validation
+- 📫 Multiple notification channel support
+- 🔑 Automatic template key generation
+- 🔒 CSRF protection and validation
+- 👀 Live preview functionality
+- 🚀 Easy integration with existing Laravel apps
+- 🎨 Clean and intuitive UI/UX
+- ♻️ Event-driven architecture
 
 ## Contributing
 
