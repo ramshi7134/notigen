@@ -33,21 +33,21 @@
     },
     "autoload": {
         "psr-4": {
-            "RamsheedM\\Notigen\\": "src/"
+            "Notigen\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "RamsheedM\\Notigen\\Tests\\": "tests/"
+            "Notigen\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "RamsheedM\\Notigen\\NotigenServiceProvider"
+                "Notigen\\NotigenServiceProvider"
             ],
             "aliases": {
-                "Notigen": "RamsheedM\\Notigen\\Facades\\Notigen"
+                "Notigen": "Notigen\\Facades\\Notigen"
             }
         }
     },
