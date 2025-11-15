@@ -7,15 +7,15 @@ A Laravel package for managing notification templates with variable support and 
 You can install the package via composer:
 
 ```bash
-composer require ramsheedm/notigen
+composer require webpacks/notigen
 ```
 
 ## Setup
 
-1. Publish the assets and config:
+1. Publish the assets and config (package service provider is auto-discovered, but you can publish assets):
 
 ```bash
-php artisan vendor:publish --provider="RamsheedM\Notigen\NotigenServiceProvider"
+php artisan vendor:publish --provider="Notigen\NotigenServiceProvider" --tag=notigen-assets
 ```
 
 2. Run migrations:
@@ -24,17 +24,17 @@ php artisan vendor:publish --provider="RamsheedM\Notigen\NotigenServiceProvider"
 php artisan migrate
 ```
 
-3. Add the service provider to `config/app.php` if not auto-discovered:
+3. (Optional) If your application does not auto-discover packages, add the service provider and facade to `config/app.php`:
 
 ```php
 'providers' => [
     // ...
-    RamsheedM\Notigen\NotigenServiceProvider::class,
+    Notigen\NotigenServiceProvider::class,
 ],
 
 'aliases' => [
     // ...
-    'Notigen' => RamsheedM\Notigen\Facades\Notigen::class,
+    'Notigen' => Notigen\Facades\Notigen::class,
 ]
 ```
 
@@ -54,7 +54,7 @@ Access the web interface at `/notigen` to manage your notification templates:
 #### Create a Template:
 
 ```php
-use RamsheedM\Notigen\Facades\Notigen;
+use Notigen\Facades\Notigen;
 
 $template = Notigen::createTemplate([
     'name' => 'Welcome Email',
