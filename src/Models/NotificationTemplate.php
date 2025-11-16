@@ -187,7 +187,7 @@ class NotificationTemplate extends Model
      */
     public static function findByKey(string $key)
     {
-        return static::where('unique_key', $key)->first();
+    return static::where('template_key', $key)->first();
     }
 
     public static function findByName(string $name)
