@@ -104,6 +104,8 @@ class TemplateNotification extends Notification implements ShouldQueue
         } else {
             $mail->view('notigen::templates.raw', [
                 'html' => $content,
+                'subject' => $subject,
+                'data' => $data,
             ]);
         }
 
