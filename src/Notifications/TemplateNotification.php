@@ -93,11 +93,21 @@ class TemplateNotification extends Notification implements ShouldQueue
             'to' => $notifiable->email ?? 'no_email_found'
         ]);
 
-        // Create mail message. Use raw HTML to avoid double-rendering the email view
-        // (renderContent already returns final HTML when the view exists).
-        return (new MailMessage)
-            ->subject($subject)
-            ->html($content);
+        // Create mail message. Prefer MailMessage::html() when available
+        // for Laravel versions that support it, otherwise fall back to
+        // rendering a small wrapper view which echoes the HTML.
+        $mail = new MailMessage();
+        $mail->subject($subject);
+
+        if (method_exists($mail, 'html')) {
+            $mail->html($content);
+        } else {
+            $mail->view('notigen::templates.raw', [
+                'html' => $content,
+            ]);
+        }
+
+        return $mail;
     }
 
     /**
