@@ -33,6 +33,21 @@
             margin-bottom: 18px;
         }
 
+        .header-banner {
+            background: #eef4f8;
+            /* pale banner similar to screenshot */
+            border-radius: 6px;
+            padding: 18px 0;
+            margin: 0 -40px 18px -40px;
+            /* extend banner to card edges */
+        }
+
+        .header-banner .app-name {
+            font-weight: 700;
+            color: #7f8b94;
+            letter-spacing: 0.02em;
+        }
+
         .greeting {
             font-size: 22px;
             font-weight: 700;
@@ -63,12 +78,9 @@
     <div class="container">
         <div class="card">
             <div class="header">
-                {{-- subtle logo placeholder --}}
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                    style="opacity:.8">
-                    <rect width="24" height="24" rx="4" fill="#e6edf2" />
-                    <path d="M6 9h12v6H6z" fill="#cbd8e0" />
-                </svg>
+                <div class="header-banner">
+                    <div class="app-name">{{ config('app.name', 'Laravel') }}</div>
+                </div>
             </div>
 
             {{-- Allow templates to provide a prominent greeting via the rendered HTML; if not, fall back to a generic greeting --}}
